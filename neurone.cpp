@@ -4,5 +4,3 @@ Neurone::Neurone(){
     value=0;
 
 }
-
-void 

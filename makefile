@@ -1,5 +1,5 @@
 CPP=clang++
-CFLAG=-Wall -Wextra -v #-Werror -O3 
+CFLAG=-Wall -Wextra #-Werror -O3 
 
 all: compile exec clean
 
