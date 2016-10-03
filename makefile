@@ -3,7 +3,7 @@ CFLAG=-Wall -Wextra #-Werror -O3
 
 all: compile exec clean
 
-compile: neurone.o MLP.o 
+compile: dataReader.o MLPTrainer.o MLP.o 
 	${CPP} -o MLP $^
 
 %.o: %.cpp
