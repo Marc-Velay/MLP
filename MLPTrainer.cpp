@@ -193,13 +193,13 @@ int main(void){
     d.setCreationApproach();
     cout << "Initialised dataset and approach" << endl;
     //create neural network
-	MLP mlp(2,5,1);
+	MLP mlp(2,10,1);
     cout << "created MLP" << endl;
 
     MLPTrainer mlpTrainer( &mlp );
     cout << "created trainer" << endl;
 	mlpTrainer.setTrainingParameters(0.001, 0.9);    //learning rate and momentum
-	mlpTrainer.setStoppingConditions(150, 90);  //nb Epochs, %desired accuracy
+	mlpTrainer.setStoppingConditions(150, 99);  //nb Epochs, %desired accuracy
 	mlpTrainer.enableLogging("log.csv", 5);     //log every 5 epochs
     cout << "created trainer parameters" << endl;
 

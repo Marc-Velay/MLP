@@ -31,3 +31,6 @@
 
 # VSCode source
 .vscode
+
+#data files
+*.csv
