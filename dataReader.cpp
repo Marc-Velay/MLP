@@ -57,7 +57,7 @@ bool dataReader::loadDataFile( const char* filename, int nI, int nT )
 		//split data set
 		trainingDataEndIndex = (int) ( 0.6 * data.size() );
 		int gSize = (int) ( ceil(0.2 * data.size()) );
-		int vSize = (int) ( data.size() - trainingDataEndIndex - gSize );
+		//int vSize = (int) ( data.size() - trainingDataEndIndex - gSize );
 							
 		//generalization set
 		for ( int i = trainingDataEndIndex; i < trainingDataEndIndex + gSize; i++ ) tSet.generalizationSet.push_back( data[i] );
@@ -80,9 +80,7 @@ bool dataReader::loadDataFile( const char* filename, int nI, int nT )
 	}
 }
 
-/*******************************************************************
-* Processes a single line from the data file
-********************************************************************/
+//Processes a single line from the data file
 void dataReader::processLine( string &line )
 {
 	//create new pattern and target
@@ -94,7 +92,6 @@ void dataReader::processLine( string &line )
 	char* t;
 	dataReader::strcpy_s(cstr, line.size() + 1, line.c_str());
 
-	//tokenise
 	int i = 0;
     char* nextToken = NULL;
 	t=strtok_r(cstr, ",", &nextToken );
@@ -104,12 +101,12 @@ void dataReader::processLine( string &line )
 		if ( i < nInputs ) pattern[i] = atof(t);
 		else target[i - nInputs] = atof(t);
 
-		//move token onwards
+		//move token forward
 		t = strtok_r(NULL,",", &nextToken );
 		i++;			
 	}
 	
-	/*cout << "pattern: ";
+	cout << "pattern: ";
 	for (int i=0; i < nInputs; i++) 
 	{
 		cout << pattern[i] << ",";
@@ -120,131 +117,56 @@ void dataReader::processLine( string &line )
 	{
 		cout << target[i] << " ";
 	}
-	cout << endl;*/
+	cout << endl;
 
 
 	//add to records
 	data.push_back( new dataEntry( pattern, target ) );		
 }
-/*******************************************************************
-* Selects the data set creation approach
-********************************************************************/
-void dataReader::setCreationApproach( int approach, double param1, double param2 )
+//Selects the data set creation approach
+void dataReader::setCreationApproach()
 {
-	//static
-	if ( approach == STATIC )
-	{
 		creationApproach = STATIC;
 		
 		//only 1 data set
 		numTrainingSets = 1;
-	}
-
-	//growing
-	else if ( approach == GROWING )
-	{			
-		if ( param1 <= 100.0 && param1 > 0)
-		{
-			creationApproach = GROWING;
-		
-			//step size
-			growingStepSize = param1 / 100;
-			growingLastDataIndex = 0;
-
-			//number of sets
-			numTrainingSets = (int) ceil( 1 / growingStepSize );				
-		}
-	}
-
-	//windowing
-	else if ( approach == WINDOWING )
-	{
-		//if initial size smaller than total entries and step size smaller than set size
-		if ( param1 < data.size() && param2 <= param1)
-		{
-			creationApproach = WINDOWING;
-			
-			//params
-			windowingSetSize = (int) param1;
-			windowingStepSize = (int) param2;
-			windowingStartIndex = 0;			
-
-			//number of sets
-			numTrainingSets = (int) ceil( (double) ( trainingDataEndIndex - windowingSetSize ) / windowingStepSize ) + 1;
-		}			
-	}
 
 }
 
-/*******************************************************************
-* Returns number of data sets created by creation approach
-********************************************************************/
+
+
+//Returns number of data sets created by creation approach
 int dataReader::getNumTrainingSets()
 {
 	return numTrainingSets;
 }
-/*******************************************************************
-* Get data set created by creation approach
-********************************************************************/
+
+
+
+//Get data set created by creation approach
 trainingDataSet* dataReader::getTrainingDataSet()
 {		
 	switch ( creationApproach )
 	{	
 		case STATIC : createStaticDataSet(); break;
-		case GROWING : createGrowingDataSet(); break;
-		case WINDOWING : createWindowingDataSet(); break;
 	}
 	
 	return &tSet;
 }
-/*******************************************************************
-* Get all data entries loaded
-********************************************************************/
+
+
+
+//Get all data entries loaded
 vector<dataEntry*>& dataReader::getAllDataEntries()
 {
 	return data;
 }
 
-/*******************************************************************
-* Create a static data set (all the entries)
-********************************************************************/
+
+
+//Create a static data set (all the entries)
 void dataReader::createStaticDataSet()
 {
 	//training set
 	for ( int i = 0; i < trainingDataEndIndex; i++ ) tSet.trainingSet.push_back( data[i] );		
-}
-/*******************************************************************
-* Create a growing data set (contains only a percentage of entries
-* and slowly grows till it contains all entries)
-********************************************************************/
-void dataReader::createGrowingDataSet()
-{
-	//increase data set by step percentage
-	growingLastDataIndex += (int) ceil( growingStepSize * trainingDataEndIndex );		
-	if ( growingLastDataIndex > (int) trainingDataEndIndex ) growingLastDataIndex = trainingDataEndIndex;
-
-	//clear sets
-	tSet.trainingSet.clear();
-	
-	//training set
-	for ( int i = 0; i < growingLastDataIndex; i++ ) tSet.trainingSet.push_back( data[i] );			
-}
-/*******************************************************************
-* Create a windowed data set ( creates a window over a part of the data
-* set and moves it along until it reaches the end of the date set )
-********************************************************************/
-void dataReader::createWindowingDataSet()
-{
-	//create end point
-	int endIndex = windowingStartIndex + windowingSetSize;
-	if ( endIndex > trainingDataEndIndex ) endIndex = trainingDataEndIndex;		
-
-	//clear sets
-	tSet.trainingSet.clear();
-					
-	//training set
-	for ( int i = windowingStartIndex; i < endIndex; i++ ) tSet.trainingSet.push_back( data[i] );
-			
-	//increase start index
-	windowingStartIndex += windowingStepSize;
 }

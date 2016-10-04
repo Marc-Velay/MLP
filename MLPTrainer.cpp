@@ -5,9 +5,10 @@
 
 using namespace std;
 
-MLPTrainer::MLPTrainer( MLP *mlp) : NN(mlp), learningRate(LEARNING_RATE), epoch(0), momentum(MOMENTUM), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY),trainingSetAccuracy(0), useBatch(false), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
+MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningRate(LEARNING_RATE), momentum(MOMENTUM), epoch(0), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY),trainingSetAccuracy(0), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
 {
-    deltaInputHidden = new( double*[NN->nHidden]);
+    cout << "MLPTrainer constructor" << endl;
+    deltaInputHidden = new( double*[NN->nInput +1]);
     for(int i = 0; i <= NN->nInput; i++) {
         deltaInputHidden[i] = new(double[NN->nHidden]);
         for(int j = 0; j < NN->nHidden; j++) {
@@ -15,30 +16,29 @@ MLPTrainer::MLPTrainer( MLP *mlp) : NN(mlp), learningRate(LEARNING_RATE), epoch(
         }
     }
 
-    deltaHiddenOutput = new(double*[NN->nOutput]);
+    deltaHiddenOutput = new( double*[NN->nHidden +1]);
     for(int i = 0; i <= NN->nHidden; i++) {
-        deltaInputHidden[i] = new(double[NN->nOutput]);
+        deltaHiddenOutput[i] = new(double[NN->nOutput]);
         for(int j = 0; j < NN->nOutput; j++) {
             deltaHiddenOutput[i][j] = 0;
         }
     }
 
     hiddenErrorGradients = new(double[NN->nHidden +1]);
-    for(int i = 0; i < NN->nHidden; i++) {
+    for(int i = 0; i <= NN->nHidden; i++) {
         hiddenErrorGradients[i] = 0;
     }
 
     outputErrorGradients = new(double[NN->nOutput +1]);
-    for(int i = 0; i < NN->nOutput; i++) {
+    for(int i = 0; i <= NN->nOutput; i++) {
         outputErrorGradients[i] = 0;
     }
 }
 
 
-void MLPTrainer::setTrainingParameters(double lR, double m, bool batch) {
+void MLPTrainer::setTrainingParameters(double lR, double m) {
     learningRate = lR;
     momentum = m;
-    useBatch = batch;
 }
 
 
@@ -84,11 +84,10 @@ void MLPTrainer::trainNetwork( trainingDataSet* tSet ) {
     lastEpochLogged = -logResolution;
 
     //train using training dataset, generalizationSet for testing
-
     while( (trainingSetAccuracy < desiredAccuracy || generalizationSetAccuracy < desiredAccuracy) && epoch < maxEpochs) {
         double previousTAccuracy = trainingSetAccuracy;
         double previousGAccuracy = generalizationSetAccuracy;
-
+        cout << "trainingSetAccuracy: " << trainingSetAccuracy << ", generalizationSetAccuracy: " << generalizationSetAccuracy << endl;
         runTrainingEpoch(tSet->trainingSet);
 
         generalizationSetAccuracy = NN->getSetAccuracy( tSet->generalizationSet);
@@ -102,7 +101,7 @@ void MLPTrainer::trainNetwork( trainingDataSet* tSet ) {
         if( ceil(previousTAccuracy) != ceil(trainingSetAccuracy) || ceil(previousGAccuracy) != ceil(generalizationSetAccuracy) ) {
             cout << "Epoch :" << epoch;
 			cout << " TSet Acc:" << trainingSetAccuracy << "%, MSE: " << trainingSetMSE ;
-			cout << " GSet Acc:" << generalizationSetAccuracy << "%, MSE: " << generalizationSetMSE << endl;	
+			cout << " GSet Acc:" << generalizationSetAccuracy << "%, MSE: " << generalizationSetMSE << endl << endl;	
         }
 
         epoch++;
@@ -122,7 +121,6 @@ void MLPTrainer::trainNetwork( trainingDataSet* tSet ) {
 void MLPTrainer::runTrainingEpoch( vector<dataEntry*> trainingSet) {
     double incorrectPatterns = 0;
     double mse = 0;
-
     for(int i = 0; i < (int)trainingSet.size(); i++) {
         NN->feedForward(trainingSet[i]->pattern);
         backpropagate(trainingSet[i]->target);
@@ -137,7 +135,6 @@ void MLPTrainer::runTrainingEpoch( vector<dataEntry*> trainingSet) {
         }
         if(!patternCorrect) incorrectPatterns++;
     }
-    if(useBatch) updateWeights();
 
     trainingSetAccuracy = 100 - (incorrectPatterns/trainingSet.size() * 100);
     trainingSetMSE = mse / ( NN->nOutput * trainingSet.size() );
@@ -147,28 +144,17 @@ void MLPTrainer::runTrainingEpoch( vector<dataEntry*> trainingSet) {
 void MLPTrainer::backpropagate( double* desiredOutputs) {
     for(int i = 0; i < NN->nOutput; i++) {
         outputErrorGradients[i] = getOutputErrorGradient( desiredOutputs[i], NN->outputNeurons[i]);
-
         for(int j = 0; j <= NN->nHidden; j++) {
-            if(!useBatch) {
-                deltaHiddenOutput[j][i] = learningRate * NN->hiddenNeurons[j] * outputErrorGradients[i] + momentum * deltaHiddenOutput[j][i];
-            } else {
-                deltaHiddenOutput[j][i] += learningRate * NN->hiddenNeurons[j] * outputErrorGradients[i];
-            }
+            deltaHiddenOutput[j][i] = learningRate * NN->hiddenNeurons[j] * outputErrorGradients[i] + momentum * deltaHiddenOutput[j][i];            
         }
     }
-
     for(int i = 0; i < NN->nHidden; i++) {
         hiddenErrorGradients[i] = getHiddenErrorGradient( i );
-
         for(int j = 0; j <= NN->nInput; j++) {
-            if(!useBatch) {
-                deltaInputHidden[j][i] = learningRate * NN->inputNeurons[j] * hiddenErrorGradients[i] + momentum * deltaInputHidden[j][i];
-            } else {
-                deltaHiddenOutput[j][i] += learningRate * NN->inputNeurons[j] * hiddenErrorGradients[i];
-            }
+            deltaInputHidden[j][i] = learningRate * NN->inputNeurons[j] * hiddenErrorGradients[i] + momentum * deltaInputHidden[j][i];
         }
     }
-    if(!useBatch) updateWeights();
+    updateWeights();
 }
 
 
@@ -181,9 +167,7 @@ void MLPTrainer::updateWeights()
 		{
 			//update weight
 			NN->wInputHidden[i][j] += deltaInputHidden[i][j];	
-			
-			//clear delta only if using batch (previous delta is needed for momentum)
-			if (useBatch) deltaInputHidden[i][j] = 0;				
+						
 		}
 	}
 	
@@ -195,15 +179,42 @@ void MLPTrainer::updateWeights()
 			//update weight
 			NN->wHiddenOutput[i][j] += deltaHiddenOutput[i][j];
 			
-			//clear delta only if using batch (previous delta is needed for momentum)
-			if (useBatch)deltaHiddenOutput[i][j] = 0;
 		}
 	}
 }
 
 
 int main(void){
-            printf("Hello World !\n\n");
-            
-            return 0;           
+    printf("Starting training !\n\n");
+    srand( (unsigned int) time(0) );
+
+    dataReader d;
+    d.loadDataFile("k-meansData.csv",2,1);
+    d.setCreationApproach();
+    cout << "Initialised dataset and approach" << endl;
+    //create neural network
+	MLP mlp(2,5,1);
+    cout << "created MLP" << endl;
+
+    MLPTrainer mlpTrainer( &mlp );
+    cout << "created trainer" << endl;
+	mlpTrainer.setTrainingParameters(0.001, 0.9);    //learning rate and momentum
+	mlpTrainer.setStoppingConditions(150, 90);  //nb Epochs, %desired accuracy
+	mlpTrainer.enableLogging("log.csv", 5);     //log every 5 epochs
+    cout << "created trainer parameters" << endl;
+
+    //train neural network on data sets
+	for (int i=0; i < d.getNumTrainingSets(); i++ )
+	{
+        cout << "training network on datasets" << endl;
+		mlpTrainer.trainNetwork( d.getTrainingDataSet() );
+	}
+
+    //save the weights
+    char * file = "weights.csv";
+	mlp.saveWeights(file);
+
+
+    cout << endl << endl << "Finished training, weights saved to: 'weights.csv'" << endl;
+    return 0;           
 }

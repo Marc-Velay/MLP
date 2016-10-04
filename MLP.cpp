@@ -99,7 +99,7 @@ bool MLP::loadWeights(char* file) {
                         }
                 }
 
-                if(weights.size() != ( (nInput + 1) * nHidden + (nHidden + 1) * nOutput) ) {    //Check if the weights were properly loaded
+                if((int)weights.size() != ( (nInput + 1) * nHidden + (nHidden + 1) * nOutput) ) {    //Check if the weights were properly loaded
                         cout << endl << "Error - Incorrect amount of weights were loaded from: " << file << endl;
 
                         inputFile.close();
@@ -127,6 +127,7 @@ bool MLP::loadWeights(char* file) {
         } else {
                 cout << endl << "Error - Could not open: " << file << endl;
         }
+        return false;
 }
 
 
@@ -153,7 +154,7 @@ bool MLP::saveWeights(char* file) {
                         }
                 }
 
-                cout << endl << "Weigths could not be saved to '" << file << "'" << endl;
+                cout << endl << "Weigths saved to '" << file << "'" << endl;
 
                 outputFile.close();
 
@@ -162,6 +163,8 @@ bool MLP::saveWeights(char* file) {
         } else {
                 cout << endl << "Error - Weight output file '" << file << "' could not be created: " << endl;
         }
+
+        return false;
 }
 
 

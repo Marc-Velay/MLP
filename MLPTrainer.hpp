@@ -12,7 +12,7 @@
 #define DESIRED_MSE 0.001 
 
 /*******************************************************************
-* Basic Gradient Descent Trainer with Momentum and Batch Learning
+* Basic Gradient Descent Trainer with Momentum 
 ********************************************************************/
 class MLPTrainer
 {
@@ -49,9 +49,6 @@ private:
 	double validationSetMSE;
 	double generalizationSetMSE;
 
-	//batch learning flag
-	bool useBatch;
-
 	//log file handle
 	bool loggingEnabled;
 	std::fstream logFile;
@@ -61,9 +58,8 @@ private:
 public:	
 	
 	MLPTrainer( MLP* untrainedNetwork );
-	void setTrainingParameters( double lR, double m, bool batch );
+	void setTrainingParameters( double lR, double m);
 	void setStoppingConditions( int mEpochs, double dAccuracy);
-	void useBatchLearning( bool flag ){ useBatch = flag; }
 	void enableLogging( const char* filename, int resolution );
 
 	void trainNetwork( trainingDataSet* tSet );

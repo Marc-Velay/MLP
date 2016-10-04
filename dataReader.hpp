@@ -38,7 +38,7 @@ public:
 };
 
 //dataset retrieval approach enum
-enum { NONE, STATIC, GROWING, WINDOWING };
+enum { NONE, STATIC};
 
 //data reader class
 class dataReader
@@ -61,12 +61,6 @@ private:
 	int numTrainingSets;
 	int trainingDataEndIndex;
 
-	//creation approach variables
-	double growingStepSize;			//step size - percentage of total set
-	int growingLastDataIndex;		//last index added to current dataSet
-	int windowingSetSize;			//initial size of set
-	int windowingStepSize;			//how many entries to move window by
-	int windowingStartIndex;		//window start index	
 	
 //public methods
 //----------------------------------------------------------------------------------------------------------------
@@ -76,7 +70,7 @@ public:
 	~dataReader();
 	
 	bool loadDataFile( const char* filename, int nI, int nT );
-	void setCreationApproach( int approach, double param1 = -1, double param2 = -1 );
+	void setCreationApproach();
 	int getNumTrainingSets();
 	
 	trainingDataSet* getTrainingDataSet();
@@ -87,8 +81,6 @@ public:
 private:
 	
 	void createStaticDataSet();
-	void createGrowingDataSet();
-	void createWindowingDataSet();	
 	void processLine( std::string &line );
     size_t strcpy_s(char *d, size_t n, char const *s);	
 };
