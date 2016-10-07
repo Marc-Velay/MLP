@@ -8,30 +8,31 @@ using namespace std;
 MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningRate(LEARNING_RATE), momentum(MOMENTUM), epoch(0), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY),trainingSetAccuracy(0), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
 {
     cout << "MLPTrainer constructor" << endl;
-    deltaInputHidden = new( double*[NN->nInput +1]);
+    //deltaInputHidden = new( double*[NN->nInput+1]);
     for(int i = 0; i <= NN->nInput; i++) {
-        deltaInputHidden[i] = new(double[NN->nHidden]);
+        double tab [NN->nHidden];
+        deltaInputHidden.push_back(tab);
         for(int j = 0; j < NN->nHidden; j++) {
             deltaInputHidden[i][j] = 0;
         }
     }
-
-    deltaHiddenOutput = new( double*[NN->nHidden +1]);
+    //deltaHiddenOutput = new( double*[NN->nHidden +1]);
     for(int i = 0; i <= NN->nHidden; i++) {
-        deltaHiddenOutput[i] = new(double[NN->nOutput]);
+        double tab [NN->nHidden];
+        deltaHiddenOutput.push_back(tab);
         for(int j = 0; j < NN->nOutput; j++) {
             deltaHiddenOutput[i][j] = 0;
         }
     }
 
-    hiddenErrorGradients = new(double[NN->nHidden +1]);
+    //hiddenErrorGradients = double [NN->nHidden +1];
     for(int i = 0; i <= NN->nHidden; i++) {
-        hiddenErrorGradients[i] = 0;
+        hiddenErrorGradients.push_back(0);
     }
 
-    outputErrorGradients = new(double[NN->nOutput +1]);
+    //outputErrorGradients [NN->nOutput +1];
     for(int i = 0; i <= NN->nOutput; i++) {
-        outputErrorGradients[i] = 0;
+        outputErrorGradients.push_back(0);
     }
 }
 
@@ -126,18 +127,28 @@ void MLPTrainer::runTrainingEpoch( vector<dataEntry*> trainingSet) {
         backpropagate(trainingSet[i]->target);
 
         bool patternCorrect = true;
-
+        //_____________________________________
+        /*if(NN!=NULL)
+            printf("meg\n\n");
+        else
+            printf("gru!\n\n");
+        fflush(stdout);
+            /*
         for(int j = 0; j < NN->nOutput; j++) {
             if(NN->clampOutput(NN->outputNeurons[j]) != trainingSet[i]->target[j] ) {
                 patternCorrect = false;
             }
             mse += pow((NN->outputNeurons[j] - trainingSet[i]->target[j]), 2);
-        }
+        }*/
+                printf("lol2\n\n\n");
+        //_____________________________________
         if(!patternCorrect) incorrectPatterns++;
     }
-
+    printf("meh\n\n");
     trainingSetAccuracy = 100 - (incorrectPatterns/trainingSet.size() * 100);
+    printf("meh\n\n");
     trainingSetMSE = mse / ( NN->nOutput * trainingSet.size() );
+    printf("Yeay!\n\n");
 } 
 
 
@@ -183,7 +194,6 @@ void MLPTrainer::updateWeights()
 	}
 }
 
-
 int main(void){
     printf("Starting training !\n\n");
     srand( (unsigned int) time(0) );
@@ -211,7 +221,7 @@ int main(void){
 	}
 
     //save the weights
-    char * file = "weights.csv";
+    char file[] = "weights.csv";
 	mlp.saveWeights(file);
 
 

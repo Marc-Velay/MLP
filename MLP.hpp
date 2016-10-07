@@ -39,7 +39,7 @@ class MLP{
     private:
         void initializeWeights();
         inline double activationFunction( double x );
-        inline int clampOutput( double x );
+        int clampOutput( double x );
         void feedForward( double* pattern );
         size_t strcpy_ss(char *d, size_t n, char const *s);
 

@@ -248,7 +248,7 @@ inline double MLP::activationFunction( double x ) {
 
 
 
-inline int MLP::clampOutput( double x ) {
+int MLP::clampOutput( double x ) {
         if( x < 0.1 ) return 0;
         else if( x > 0.9 ) return 1;
         else return -1;
@@ -280,4 +280,5 @@ void MLP::feedForward( double* pattern) {
 
                 outputNeurons[i] = activationFunction( outputNeurons[i]);
         }
+        
 }

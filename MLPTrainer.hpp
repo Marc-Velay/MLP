@@ -34,12 +34,13 @@ private:
 	double desiredAccuracy;
 	
 	//change to weights
-	double** deltaInputHidden;
-	double** deltaHiddenOutput;
+	vector<double*> deltaInputHidden;
+	//double** deltaInputHidden;
+	vector<double*> deltaHiddenOutput;
 
 	//error gradients
-	double* hiddenErrorGradients;
-	double* outputErrorGradients;
+	vector<double> hiddenErrorGradients;
+	vector<double> outputErrorGradients;
 
 	//accuracy stats per epoch
 	double trainingSetAccuracy;
