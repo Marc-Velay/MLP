@@ -8,7 +8,6 @@ using namespace std;
 MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningRate(LEARNING_RATE), momentum(MOMENTUM), epoch(0), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY),trainingSetAccuracy(0), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
 {
     cout << "MLPTrainer constructor" << endl;
-    //deltaInputHidden = new( double*[NN->nInput+1]);
     for(int i = 0; i <= NN->nInput; i++) {
         double tab [NN->nHidden];
         deltaInputHidden.push_back(tab);
@@ -16,7 +15,6 @@ MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningR
             deltaInputHidden[i][j] = 0;
         }
     }
-    //deltaHiddenOutput = new( double*[NN->nHidden +1]);
     for(int i = 0; i <= NN->nHidden; i++) {
         double tab [NN->nHidden];
         deltaHiddenOutput.push_back(tab);
@@ -24,13 +22,9 @@ MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningR
             deltaHiddenOutput[i][j] = 0;
         }
     }
-
-    //hiddenErrorGradients = double [NN->nHidden +1];
     for(int i = 0; i <= NN->nHidden; i++) {
         hiddenErrorGradients.push_back(0);
     }
-
-    //outputErrorGradients [NN->nOutput +1];
     for(int i = 0; i <= NN->nOutput; i++) {
         outputErrorGradients.push_back(0);
     }
