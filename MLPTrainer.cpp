@@ -5,28 +5,30 @@
 
 using namespace std;
 
-MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningRate(LEARNING_RATE), momentum(MOMENTUM), epoch(0), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY),trainingSetAccuracy(0), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
+MLPTrainer::MLPTrainer( MLP *untrainedNetwork) : NN(untrainedNetwork), learningRate(LEARNING_RATE), momentum(MOMENTUM), epoch(0), maxEpochs(MAX_EPOCHS), desiredAccuracy(DESIRED_ACCURACY), deltaInputHidden (untrainedNetwork->nInput+1), deltaHiddenOutput (untrainedNetwork->nHidden+1), hiddenErrorGradients (untrainedNetwork->nHidden+1), outputErrorGradients (untrainedNetwork->nOutput+1),trainingSetAccuracy(0), validationSetAccuracy(0), generalizationSetAccuracy(0), trainingSetMSE(0), validationSetMSE(0),generalizationSetMSE(0)	 
 {
     cout << "MLPTrainer constructor" << endl;
     for(int i = 0; i <= NN->nInput; i++) {
         double tab [NN->nHidden];
-        deltaInputHidden.push_back(tab);
+        deltaInputHidden.at(i) = tab;
         for(int j = 0; j < NN->nHidden; j++) {
             deltaInputHidden[i][j] = 0;
         }
     }
     for(int i = 0; i <= NN->nHidden; i++) {
-        double tab [NN->nHidden];
-        deltaHiddenOutput.push_back(tab);
+        double tab [NN->nOutput];
+        deltaHiddenOutput.at(i)= tab;
         for(int j = 0; j < NN->nOutput; j++) {
             deltaHiddenOutput[i][j] = 0;
         }
     }
+    
     for(int i = 0; i <= NN->nHidden; i++) {
-        hiddenErrorGradients.push_back(0);
+        hiddenErrorGradients.at(i)= 0;
     }
+    
     for(int i = 0; i <= NN->nOutput; i++) {
-        outputErrorGradients.push_back(0);
+        outputErrorGradients[i]= 0;
     }
 }
 
@@ -116,47 +118,43 @@ void MLPTrainer::trainNetwork( trainingDataSet* tSet ) {
 void MLPTrainer::runTrainingEpoch( vector<dataEntry*> trainingSet) {
     double incorrectPatterns = 0;
     double mse = 0;
+    
     for(int i = 0; i < (int)trainingSet.size(); i++) {
         NN->feedForward(trainingSet[i]->pattern);
         backpropagate(trainingSet[i]->target);
 
         bool patternCorrect = true;
-        //_____________________________________
-        /*if(NN!=NULL)
-            printf("meg\n\n");
-        else
-            printf("gru!\n\n");
-        fflush(stdout);
-            /*
+
         for(int j = 0; j < NN->nOutput; j++) {
             if(NN->clampOutput(NN->outputNeurons[j]) != trainingSet[i]->target[j] ) {
                 patternCorrect = false;
             }
             mse += pow((NN->outputNeurons[j] - trainingSet[i]->target[j]), 2);
-        }*/
-                printf("lol2\n\n\n");
-        //_____________________________________
+        }
         if(!patternCorrect) incorrectPatterns++;
     }
-    printf("meh\n\n");
     trainingSetAccuracy = 100 - (incorrectPatterns/trainingSet.size() * 100);
-    printf("meh\n\n");
     trainingSetMSE = mse / ( NN->nOutput * trainingSet.size() );
-    printf("Yeay!\n\n");
 } 
 
 
 void MLPTrainer::backpropagate( double* desiredOutputs) {
+    
+    cin.ignore();
     for(int i = 0; i < NN->nOutput; i++) {
         outputErrorGradients[i] = getOutputErrorGradient( desiredOutputs[i], NN->outputNeurons[i]);
         for(int j = 0; j <= NN->nHidden; j++) {
-            deltaHiddenOutput[j][i] = learningRate * NN->hiddenNeurons[j] * outputErrorGradients[i] + momentum * deltaHiddenOutput[j][i];            
+            deltaHiddenOutput[j][i] = learningRate * NN->hiddenNeurons[j] * outputErrorGradients[i] + momentum * deltaHiddenOutput[j][i];       
         }
     }
+    
     for(int i = 0; i < NN->nHidden; i++) {
         hiddenErrorGradients[i] = getHiddenErrorGradient( i );
-        for(int j = 0; j <= NN->nInput; j++) {
+        cin.ignore();
+        //Nous supposons que l'erreur a lieu lors du parcours de deltaInputHidden
+        for(int j = 0; j <= NN->nInput; j++) { 
             deltaInputHidden[j][i] = learningRate * NN->inputNeurons[j] * hiddenErrorGradients[i] + momentum * deltaInputHidden[j][i];
+            cout << "nHidden, nInput :" << j << ", " << i << endl;
         }
     }
     updateWeights();
@@ -187,30 +185,24 @@ void MLPTrainer::updateWeights()
 		}
 	}
 }
-
+ 
 int main(void){
-    printf("Starting training !\n\n");
     srand( (unsigned int) time(0) );
 
     dataReader d;
     d.loadDataFile("k-meansData.csv",2,1);
     d.setCreationApproach();
-    cout << "Initialised dataset and approach" << endl;
     //create neural network
 	MLP mlp(2,10,1);
-    cout << "created MLP" << endl;
-
     MLPTrainer mlpTrainer( &mlp );
-    cout << "created trainer" << endl;
+
 	mlpTrainer.setTrainingParameters(0.001, 0.9);    //learning rate and momentum
 	mlpTrainer.setStoppingConditions(150, 99);  //nb Epochs, %desired accuracy
 	mlpTrainer.enableLogging("log.csv", 5);     //log every 5 epochs
-    cout << "created trainer parameters" << endl;
 
     //train neural network on data sets
 	for (int i=0; i < d.getNumTrainingSets(); i++ )
 	{
-        cout << "training network on datasets" << endl;
 		mlpTrainer.trainNetwork( d.getTrainingDataSet() );
 	}
 

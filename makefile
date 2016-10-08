@@ -1,4 +1,4 @@
-CPP=clang++
+CPP=g++
 CFLAG=-Wall -Wextra #-Werror -O3 
 
 all: compile exec clean
